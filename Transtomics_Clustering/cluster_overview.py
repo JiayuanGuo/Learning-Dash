@@ -10,31 +10,17 @@ df = pd.read_csv('df5_log2_ratio.csv', index_col = ['locus_tag'])
 app = dash.Dash()
 
 app.layout = html.Div([
-    html.Div([
-        #dcc.Slider(
-        #    id='k-value--slider',
-        #    min=11,
-        #    max=30,
-        #    value=15,
-        #    step=1,
-        #    marks={i: '{}'.format(i) for i in range(11,30)}
-        #)
-        #dcc.Input(id='my-id', value='', type='text')
-        dcc.Input(id='my-id',placeholder='Enter a value...',type='text',value=15)
-    ]),
-    html.Div([
-        dcc.Graph(id='graph-with-slider')
+        dcc.Input(id='my-id', value='15', type='number'),
+    dcc.Graph(id='graph-with-slider')
     ])
-])
 
 
 @app.callback(
     dash.dependencies.Output('graph-with-slider', 'figure'),
     [dash.dependencies.Input(component_id='my-id',component_property='value')]
-         #Input('k-value--slider', 'value')]
 )
 
-def update_figure(kvalue):
+def cluster_size_figure(kvalue):
     X = df
 
     kmeans = KMeans(n_clusters=kvalue, max_iter=300, random_state=4)
@@ -47,26 +33,30 @@ def update_figure(kvalue):
 
     count = df_clusters.groupby('cluster').count().iloc[:, 0]
 
+    y_stdev = df_clusters.groupby("cluster").std()
+    y_mean = df_clusters.groupby("cluster").mean()
+
+    y_low = y_mean.subtract(y_stdev, fill_value=0)
+    y_high = y_mean.add(y_stdev, fill_value=0)
+
     return {
         'data':[go.Bar(
             x = list(count.index),
-            y = count.values,
-            mode='markers',
-            opacity=0.7,
-            marker={
-                'size': 15,
-                'line': {'width': 0.5, 'color': 'white'}
-            },
+            y = count.values
+            #mode='markers',
+            #opacity=0.7
+            #marker={
+                #'size': 15,
+                #'line': {'width': 0.5, 'color': 'white'}
+            #},
         )],
         'layout': go.Layout(
-            xaxis = {title:'cluster id'},
-            yaxis = {title:'number of genes in each cluster'},
+            xaxis = {'title':'cluster id'},
+            yaxis = {'title':'number of genes in each cluster'},
             margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
             hovermode='closest'
         )
     }
-
-
 
 if __name__ == '__main__':
     app.run_server()
