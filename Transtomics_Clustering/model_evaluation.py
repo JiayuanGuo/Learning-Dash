@@ -2,6 +2,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
+import plotly
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
@@ -10,13 +11,10 @@ from scipy.spatial.distance import cdist, pdist
 
 df = pd.read_csv('df5_log2_ratio.csv', index_col = ['locus_tag'])
 
-#Elbow Method
-
 app = dash.Dash()
 
 app.layout = html.Div([
         dcc.Input(id='k-range', value= 30, type='number'),
-    #dcc.Graph(id='graph-cluster-profile'),
     dcc.Graph(id='graph-elbow_method')
     ])
 
@@ -46,19 +44,44 @@ def elbow_method_evaluation(n):
     # The between-clusters sum of square
     bss = tss - wss
 
-    return {
-        'data': [go.Bar(
-            x=list(K),
-            y=list(wss)
-        )],
-        'layout': go.Layout(
-            xaxis={'title': 'K Value'},
-            yaxis={'title': 'Sum of Within-cluster Distance/1000'},
-            margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
-            hovermode='closest'
-        )
-    }
+    # Difference of sum of within cluster distance to next smaller k
+    dwss = [wss[i + 1] - wss[i] for i in range(len(wss) - 1)]
+    dwss.insert(0, 0) # insert value of 0 at first position of dwss
 
+    # Create the graph with subplots
+    fig = plotly.tools.make_subplots(rows=2, cols=1, vertical_spacing=0.2, shared_xaxes=True,
+                                     subplot_titles=('Sum of Within-cluster Distance/1000',
+                                                     'Difference of Sum of Within-cluster Distance to Next Lower K/1000'))
+    fig['layout']['margin'] = {
+        'l': 40, 'r': 40, 'b': 40, 't': 40
+    }
+    #fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
+
+    fig.append_trace({
+        'x': list(K),
+        'y': list(wss),
+        #'name': 'Sum of Within-cluster Distance/1000',
+        'mode': 'lines+markers',
+        'type': 'scatter'
+    }, 1, 1)
+    fig.append_trace({
+        'x': list(K),
+        'y': list(dwss),
+        #'text': data['time'],
+        #'name': 'Difference of Sum of Within-cluster Distance to Next Lower K/1000',
+        'mode': 'lines+markers',
+        'type': 'scatter'
+    }, 2, 1)
+
+    fig['layout']['xaxis1'].update(title='K Value')
+    fig['layout']['xaxis2'].update(title='K Value')
+    fig['layout']['yaxis1'].update(title='Distance Value')
+    fig['layout']['yaxis2'].update(title='Distance Value')
+
+    fig['layout'].update(height=600, width=1000,
+                         title='Model Evaluation: Elbow Method for Optimal K Value')
+
+    return fig
 
 if __name__ == '__main__':
     app.run_server()
