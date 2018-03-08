@@ -10,7 +10,9 @@ df = pd.read_csv('df5_log2_ratio.csv', index_col = ['locus_tag'])
 app = dash.Dash()
 
 app.layout = html.Div([
+        html.Label('Choose K Value'),
         dcc.Input(id='k-value', value= 15, type='number'),
+        html.Label('Choose Cluster id'),
         dcc.Input(id='cluster-id', value = 0, type = 'number'),
     dcc.Graph(id='graph-cluster-profile'),
     dcc.Graph(id='graph-cluster-size')
@@ -40,10 +42,10 @@ def cluster_size_figure(kvalue):
             x = list(count.index),
             y = count.values
         )],
-        'layout': go.Layout(
+        'layout': go.Layout(height=300, width=800,
             xaxis = {'title':'cluster id'},
             yaxis = {'title':'number of genes in each cluster'},
-            margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+            margin={'l': 40, 'b': 40, 't': 40, 'r': 40},
             hovermode='closest'
         )
     }
@@ -90,7 +92,7 @@ def cluster_size_figure(kvalue,clusterid):
             y=y_high.values[clusterid])
 
     return {'data':[tracey, tracey_lo, tracey_hi],
-        'layout': go.Layout(
+        'layout': go.Layout(height=300, width=800,
             title=title_str,
             #xaxis = {'title':'cluster id'},
             #yaxis = {'title':'number of genes in each cluster'},

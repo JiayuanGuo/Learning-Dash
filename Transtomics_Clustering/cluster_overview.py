@@ -10,14 +10,14 @@ df = pd.read_csv('df5_log2_ratio.csv', index_col = ['locus_tag'])
 app = dash.Dash()
 
 app.layout = html.Div([
-        dcc.Input(id='my-id', value='15', type='number'),
-    dcc.Graph(id='graph-with-slider')
+        dcc.Input(id='k-value', value= 15, type='number'),
+    dcc.Graph(id='graph-cluster-size')
     ])
 
 
 @app.callback(
-    dash.dependencies.Output('graph-with-slider', 'figure'),
-    [dash.dependencies.Input(component_id='my-id',component_property='value')]
+    dash.dependencies.Output('graph-cluster-size', 'figure'),
+    [dash.dependencies.Input(component_id='k-value',component_property='value')]
 )
 
 def cluster_size_figure(kvalue):
@@ -33,22 +33,10 @@ def cluster_size_figure(kvalue):
 
     count = df_clusters.groupby('cluster').count().iloc[:, 0]
 
-    y_stdev = df_clusters.groupby("cluster").std()
-    y_mean = df_clusters.groupby("cluster").mean()
-
-    y_low = y_mean.subtract(y_stdev, fill_value=0)
-    y_high = y_mean.add(y_stdev, fill_value=0)
-
     return {
         'data':[go.Bar(
             x = list(count.index),
             y = count.values
-            #mode='markers',
-            #opacity=0.7
-            #marker={
-                #'size': 15,
-                #'line': {'width': 0.5, 'color': 'white'}
-            #},
         )],
         'layout': go.Layout(
             xaxis = {'title':'cluster id'},
